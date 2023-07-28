@@ -1,0 +1,136 @@
+import tkinter as tk
+from tkinter import messagebox
+import random
+
+# Quiz data (questions, options, and correct answers)
+quiz_data = [
+    {
+        "question": "Who develope python?",
+        "options": ['Zim den', 'Niene stom', 'Guido van rossum', 'Wick van rossum'],
+        "correct_answer": "Guido van rossum"
+    },
+    {
+        "question": "Which extension we use in python?",
+        "options": ['.python', '.py', '.pyl', '.p'],
+        "correct_answer": ".py"
+    },
+    {
+        "question": "use of print()?",
+        "options": ['All', 'to take i/p', 'to read', 'to print'],
+        "correct_answer": "to print"
+    },
+    {
+        "question": "python is case sensitive?",
+        "options": ['yes', 'no', 'machine depedant', 'none of this'],
+        "correct_answer": "yes"
+    },
+    {
+        "question": "print(x<<2)?",
+        "options": ['1', '4', '8', '2'],
+        "correct_answer": "4"
+    }
+]
+
+class QuizApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Quiz App")
+        self.root.geometry("400x400")
+
+        # Colors
+        self.bg_color = "grey"  # Light purple background
+        self.question_color = "black"  # Deep purple text color
+        self.option_color = "black"  # Purple text color
+        self.correct_color = "#2E7D32"  # Green text color for correct answer
+        self.incorrect_color = "#C62828"  # Red text color for incorrect answer
+
+        self.score = 0
+        self.question_number = 0
+        self.seconds_left = 15  # Change this to set the timer duration
+        self.timer_running = False
+
+        self.label_intro = tk.Label(root, text="Welcome to the Quiz App!\nYou have 15 seconds to answer each question.", fg='White', bg='grey')
+        self.label_intro.pack(pady=10)
+
+        self.label_question = tk.Label(root, text="", height=5, width=28, bg='black', fg="#fff", font=('Verdana', 15),wraplength=300)
+        self.label_question.pack(pady=10)
+
+        self.radio_var = tk.IntVar()
+        self.radio_var.set(-1)
+
+        self.radio_buttons = []
+        for i in range(4):
+            radio_btn = tk.Radiobutton(root, text="", variable=self.radio_var, value=i, fg=self.option_color, bg=self.bg_color)
+            radio_btn.pack(anchor=tk.W)
+            self.radio_buttons.append(radio_btn)
+
+        self.label_timer = tk.Label(root, text="Time left: {}s".format(self.seconds_left), fg=self.option_color, bg=self.bg_color)
+        self.label_timer.pack()
+
+        self.btn_submit = tk.Button(root, text="Submit", command=self.check_answer, bg=self.option_color, fg="white")
+        self.btn_submit.pack(pady=10)
+
+        self.load_question()
+
+    def load_question(self):
+        if self.question_number < len(quiz_data):
+            self.label_question.config(text=quiz_data[self.question_number]["question"])
+            options = quiz_data[self.question_number]["options"]
+            random.shuffle(options)
+            for i in range(4):
+                self.radio_buttons[i].config(text=options[i], fg=self.option_color)
+            self.start_timer()
+        else:
+            self.show_score()
+
+    def start_timer(self):
+        if not self.timer_running:
+            self.timer_running = True
+            self.countdown()
+
+    def countdown(self):
+        if self.seconds_left > 0:
+            self.label_timer.config(text="Time left: {}s".format(self.seconds_left))
+            self.seconds_left -= 1
+            self.root.after(1000, self.countdown)
+        else:
+            self.timer_running = False
+            self.check_answer()
+
+    def check_answer(self):
+        if self.timer_running:
+            self.timer_running = False
+
+        selected_option = self.radio_var.get()
+        if selected_option == -1:
+            messagebox.showinfo("Time's up!", "You didn't select an option. The correct answer is: {}".format(quiz_data[self.question_number]["correct_answer"]))
+        else:
+            selected_answer = self.radio_buttons[selected_option].cget("text")
+            correct_answer = quiz_data[self.question_number]["correct_answer"]
+
+            if selected_answer == correct_answer:
+                self.score += 1
+                self.radio_buttons[selected_option].config(fg=self.correct_color)
+
+            else:
+                self.radio_buttons[selected_option].config(fg=self.incorrect_color)
+                for i in range(4):
+                    if self.radio_buttons[i]["text"] == correct_answer:
+                        self.radio_buttons[i].config(fg=self.correct_color)
+
+        self.question_number += 1
+        self.radio_var.set(-1)
+        self.seconds_left = 15  # Reset the timer for the next question
+        self.label_timer.config(text="Time left: {}s".format(self.seconds_left))
+
+        self.load_question()
+
+    def show_score(self):
+        messagebox.showinfo("Quiz Completed", "Your score: {}/{}".format(self.score, len(quiz_data)))
+        self.root.destroy()
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = QuizApp(root)
+    root.configure(bg=app.bg_color)
+    root.mainloop()
